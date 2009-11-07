@@ -7,24 +7,50 @@ require Exporter;
 	SvGROW	
 );
 
-$VERSION = '0.02';
+$VERSION = '0.03';
+if (eval <<'dgrowp'
+   use Data::Peek 'DGrow';
+   1;
+dgrowp
+){
+   eval <<'LVAL' or eval <<'NOLVAL' or die "DGrow sub failed: $@"
 
-eval <<'LVAL' or eval <<'NOLVAL';
-sub SvGROW($$) : lvalue {
-  my $tmp = $_[0];
-  $_[0] = pack 'x'.int(0+$_[1]);
-  $_[0] = $tmp;
-  $_[0]
-}
-1;
+     sub SvGROW($$) : lvalue {
+        DGrow($_[0],$_[1]);
+        $_[0]
+     }
+     1;
 LVAL
-sub SvGROW($$) {
-  my $tmp = $_[0];
-  $_[0] = pack 'x'.int(0+$_[1]);
-  $_[0] = $tmp;
-  $_[0]
-}
+
+     sub SvGROW($$) {
+        DGrow($_[0],$_[1]);
+        $_[0]
+     }
 NOLVAL
+
+}
+else
+{
+   eval <<'LVAL' or eval <<'NOLVAL'
+
+     sub SvGROW($$) : lvalue {
+        my $tmp = $_[0];
+        $_[0] = pack 'x'.int(0+$_[1]);
+        $_[0] = $tmp;
+        $_[0]
+     }
+     1;
+LVAL
+
+     sub SvGROW($$) {
+        my $tmp = $_[0];
+        $_[0] = pack 'x'.int(0+$_[1]);
+        $_[0] = $tmp;
+        $_[0]
+     }
+NOLVAL
+
+};
 
 1;
 __END__
@@ -55,8 +81,16 @@ the first the string to extend and the second the length.
 
 L<perlguts>
 
-The author is in favor of allowing C<length> to
+L<Data::Peek> for a benchmarking of the alternatives
+
+The author of this module is in favor of allowing C<length> to
 be used as an lvalue to thinly invoke the SvGROW internals macro
+
+=head1 CHANGES
+
+=head2 0.03
+
+Data::Peek::DGrow will be used if available
 
 =head1 AUTHOR
 
